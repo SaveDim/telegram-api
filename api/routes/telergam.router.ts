@@ -1,7 +1,8 @@
-import express from 'express';
-import {sendTelegramMessage, sendTelegramPhoto} from "../services/telegram.service";
+import express, {text} from 'express';
+import {getFileUrlById, sendTelegramMessage, sendTelegramPhoto, getBiggestPhoto} from "../services/telegram.service";
 import {IMessage} from "../telegram_objects/Message";
 import {IMessageWithPhoto} from "../telegram_objects/Photo";
+import {ITelegramUpdate} from "../telegram_objects/ITelegramUpdate";
 
 const telegramRouter = express.Router()
 
@@ -49,5 +50,48 @@ telegramRouter.post('/sendPhoto', async (req, res) => {
 
     res.json({ ok: true });
 });
+
+telegramRouter.post('/webHook/1234', async (req, res) => {
+
+    const body: ITelegramUpdate = req.body
+
+    if (!body.message) {
+        console.log("has not message")
+        res.json({ok: false})
+        return
+    }
+
+    if (body.message.text) {
+        console.log("text", body.message.text)
+        const text = body.message.text;
+        if (text === 'Привет') {
+            await sendTelegramMessage(body.message.from.id, "Добрый день", null);
+        }
+        if (text !== 'Привет') {
+            await sendTelegramMessage(body.message.from.id, "Неизвестный запрос", null);
+        }
+    }
+
+    if (body.message.photo) {
+        console.log("has photo")
+
+        const photos = body.message.photo;
+
+        //найти самое большое фото
+        const biggest_photo = getBiggestPhoto(photos);
+        const file_url = await getFileUrlById(biggest_photo.file_id);
+
+        console.log(biggest_photo.file_id)
+        console.log({file_url})
+
+        await sendTelegramPhoto(body.message.from.id, file_url, 'Ты прислал это фото', '');
+    }
+
+
+    res.json({ok: true})
+
+})
+
+//
 
 export default telegramRouter
