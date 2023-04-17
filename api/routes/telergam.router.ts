@@ -68,7 +68,7 @@ telegramRouter.post('/webHook/1234', async (req, res) => {
             await sendTelegramMessage(body.message.from.id, "Добрый день", null);
         }
         if (text !== 'Привет') {
-            await sendTelegramMessage(body.message.from.id, "Неизвестный запрос", null);
+            await sendTelegramMessage(body.message.from.id, 'Ты прислал "' + text + '" Это неизвестный запрос', null);
         }
     }
 
@@ -78,10 +78,11 @@ telegramRouter.post('/webHook/1234', async (req, res) => {
         const photos = body.message.photo;
 
         //найти самое большое фото
-        const biggest_photo = getBiggestPhoto(photos);
+        const biggest_photo = await getBiggestPhoto(photos);
         const file_url = await getFileUrlById(biggest_photo.file_id);
+        // const downloadedPhoto = await downloadPhoto(file_url)
 
-        console.log(biggest_photo.file_id)
+        // console.log(biggest_photo.file_id)
         console.log({file_url})
 
         await sendTelegramPhoto(body.message.from.id, file_url, 'Ты прислал это фото', '');
